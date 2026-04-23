@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matemáticas PAES — El Algoritmo Maestro</title>
+<style>
+/* RESET Y SCROLL LIBRE */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0f1117;color:#f0f0f0;overflow-x:hidden;overflow-y:auto}
+
+/* SLIDES (Ajuste para que no se bloqueen con contenido largo) */
+.slide{display:none;min-height:100vh;padding:60px 80px 120px;flex-direction:column;justify-content:center}
+.slide.active{display:flex}
+
+/* PORTADA */
+#s0{align-items:center;text-align:center}
+#s0 .big{font-size:50px;font-weight:700;color:#fff;line-height:1.1;margin-bottom:14px}
+#s0 .sub{font-size:20px;color:#94a3b8;margin-bottom:10px}
+#s0 .context{font-size:16px;color:#94a3b8;max-width:680px;line-height:1.7;margin-top:24px}
+#s0 .tag{display:inline-block;background:#1e293b;border:1px solid #334155;border-radius:6px;padding:6px 18px;font-size:14px;color:#94a3b8;margin-top:20px}
+
+/* HEADERS */
+.seg-bar{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.seg-badge{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px}
+.seg-time{font-size:13px;color:#64748b}
+h2{font-size:32px;font-weight:700;color:#fff;margin-bottom:22px;line-height:1.2}
+
+/* CARDS GENERALES */
+.parts{display:grid;gap:14px}
+.part{border-radius:10px;padding:16px 20px;border:1px solid #1e293b;background:#13192a}
+.part-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;color:#38bdf8}
+.part p{font-size:15px;line-height:1.65;color:#e2e8f0;margin-bottom:6px}
+.part ul{padding-left:18px;margin-top:6px}
+.part li{font-size:14px;line-height:1.7;color:#cbd5e1;margin-bottom:4px}
+
+/* PERSONAJES/TRAMPAS */
+.fiction{border-radius:6px;padding:14px 18px;font-style:italic;font-size:14px;color:#cbd5e1;margin-bottom:12px;border-left:4px solid #f59e0b;background:#1c1200}
+.fiction span{display:block;font-style:normal;font-size:12px;color:#94a3b8;margin-top:6px;font-weight:600}
+
+/* TABLA INTERACTIVA (Patrones) */
+.ptable{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+.ptable th{font-weight:600;padding:10px 12px;background:#0c1020;border:1px solid #334155;text-align:center;color:#94a3b8}
+.ptable td{padding:10px 12px;border:1px solid #334155;text-align:center;color:#e2e8f0}
+.ptable .hidden{background:#1e293b;color:#475569;cursor:pointer;font-style:italic;transition:all .2s}
+.ptable .hidden:hover{background:#334155;color:#94a3b8}
+.ptable .shown{background:transparent;font-style:normal;color:#fbbf24;font-weight:600}
+
+/* ORÁCULO Y BOTONES DE REVELAR */
+.oracle-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.oracle-num{font-size:22px;font-weight:700;color:#e2e8f0;font-family:'Courier New',monospace;margin-bottom:6px;letter-spacing:1px}
+.rev-btn{font-size:12px;background:#334155;border:none;color:#f8fafc;padding:6px 14px;border-radius:5px;cursor:pointer;margin-top:8px;font-weight:600;transition:background .2s}
+.rev-btn:hover{background:#475569}
+.rev-ans{display:none;margin-top:12px;font-size:13px;line-height:1.6;padding:10px 14px;border-radius:6px;background:#0c1020;color:#7dd3fc;border-left:3px solid #0ea5e9}
+
+/* QUIZ SPRINT */
+.quiz-q{font-size:16px;color:#e2e8f0;line-height:1.6;margin-bottom:16px;background:#13192a;border:1px solid #1e293b;border-radius:8px;padding:16px 20px}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qopt{background:#0f1117;border:1px solid #334155;border-radius:8px;padding:12px 16px;font-size:14px;color:#cbd5e1;cursor:pointer;text-align:left;transition:all .15s}
+.qopt:hover{background:#1e293b}
+.qopt.correct{background:#052e16!important;border-color:#16a34a!important;color:#86efac!important}
+.qopt.wrong{background:#2d0000!important;border-color:#b91c1c!important;color:#fca5a5!important}
+.quiz-exp{display:none;margin-top:16px;font-size:14px;padding:14px 18px;border-radius:6px;line-height:1.6}
+.quiz-nav{display:flex;gap:10px;align-items:center;margin-top:20px}
+.quiz-nav button{background:#1e293b;border:none;color:#94a3b8;padding:8px 20px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600}
+.quiz-nav button:hover{background:#334155;color:#fff}
+.quiz-nav button:disabled{opacity:.3;cursor:default}
+.quiz-prog{font-size:14px;color:#64748b;font-weight:600;margin-left:auto}
+
+/* RESPUESTAS CLAVE */
+.ans-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ans-card{border-radius:10px;padding:16px 20px;border:1px solid #334155;background:#0c1020}
+.ans-card h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;color:#38bdf8}
+
+/* NAV INFERIOR */
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;background:#090c12;border-top:1px solid #1e293b;z-index:100}
+nav button{background:#1e293b;border:none;color:#f8fafc;padding:8px 20px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600}
+nav button:hover{background:#334155}
+nav button:disabled{opacity:.3;cursor:default}
+.counter{font-size:13px;color:#94a3b8;font-weight:600}
+.dots{display:flex;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:#334155;cursor:pointer;transition:background .2s}
+.dot.active{background:#e2e8f0}
+.hint{position:fixed;top:16px;right:20px;font-size:11px;color:#64748b}
+</style>
+</head>
+<body>
+
+<!-- S0 PORTADA -->
+<div class="slide active" id="s0">
+  <div class="big">El Algoritmo Maestro</div>
+  <div class="sub">Números Enteros · Divisibilidad · Patrones</div>
+  <div class="context">Los números tienen un código oculto. Hoy no vamos a gastar tiempo multiplicando números gigantes; vamos a hackear la PAES modelando patrones, analizando la divisibilidad y destruyendo ilusiones ópticas que engañan a la mayoría de los estudiantes.</div>
+  <div class="tag">M1 · Habilidades de Modelación y Argumentación</div>
+</div>
+
+<!-- S1 ORÁCULO -->
+<div class="slide" id="s1">
+  <div class="seg-bar">
+    <span class="seg-badge" style="background:#0c1a2e;color:#7dd3fc">Calentamiento · 0–10 min</span>
+    <span class="seg-time">El desafío del Oráculo</span>
+  </div>
+  <h2>¿Pueden responder esto en 5 segundos?</h2>
+  <div class="oracle-grid">
+    <div class="part">
+      <div class="oracle-num">4·3·8·2·9·0·7·5</div>
+      <p style="font-size:13px;color:#94a3b8;margin-bottom:10px">¿El producto es par, impar o cero?</p>
+      <button class="rev-btn" onclick="toggle('r1')">Ver razonamiento</button>
+      <div class="rev-ans" id="r1">Cero. Basta un factor 0 para que todo el producto se anule. No calculen nada.</div>
+    </div>
+    <div class="part">
+      <div class="oracle-num">3·7·11·13·17·9</div>
+      <p style="font-size:13px;color:#94a3b8;margin-bottom:10px">¿Es divisible por 6?</p>
+      <button class="rev-btn" onclick="toggle('r2')">Ver razonamiento</button>
+      <div class="rev-ans" id="r2">No. Div. por 6 exige ser par y div. por 3. Como todos son impares, el resultado será impar (nunca divisible por 2).</div>
+    </div>
+    <div class="part">
+      <div class="oracle-num">Suma = 5.050</div>
+      <p style="font-size:13px;color:#94a3b8;margin-bottom:10px">¿Esa suma exacta es divisible por 4?</p>
+      <button class="rev-btn" onclick="toggle('r3')">Ver razonamiento</button>
+      <div class="rev-ans" id="r3">No. Regla del 4: mirar las últimas dos cifras. "50" dividido en 4 es 12,5 (no exacto).</div>
+    </div>
+  </div>
+</div>
+
+<!-- S2 EL PROBLEMA DE LA ESCALERA -->
+<div class="slide" id="s2">
+  <div class="seg-bar">
+    <span class="seg-badge" style="background:#2d1f00;color:#fbbf24">Contexto PAES · 10–25 min</span>
+    <span class="seg-time">Modelando Divisibilidad</span>
+  </div>
+  <h2>El Laberinto de la Escalera</h2>
+  <div class="parts" style="grid-template-columns:1fr 1fr;">
+    <div class="part">
+      <div class="part-label">Parte A — Analizar</div>
+      <p>La escalera de un edificio tiene <b>18 peldaños</b> entre cada piso. La altura exacta de cada peldaño es de <b>20 cm</b>.</p>
+      <p>Una persona empieza a subir desde el primer piso. Ha subido <b><var>p</var></b> peldaños en total.</p>
+      <ul style="margin-top:12px">
+        <li>¿Cuántos centímetros mide un piso completo?</li>
+        <li>Si subió <b><var>p</var></b> peldaños, ¿qué expresión representa la distancia total en centímetros que subió?</li>
+      </ul>
+    </div>
+    <div class="part">
+      <div class="part-label">Parte B — Argumentar (Pregunta Oficial)</div>
+      <p>¿Cuál de las siguientes condiciones garantiza matemáticamente que la persona llegó <b>exactamente</b> a un nuevo piso?</p>
+      <ul style="list-style:none;margin-top:10px;padding-left:0">
+        <li style="margin-bottom:8px"><button class="rev-btn" style="background:#1e293b;width:100%;text-align:left">A) Que 18·p sea divisible por 20.</button></li>
+        <li style="margin-bottom:8px"><button class="rev-btn" style="background:#1e293b;width:100%;text-align:left">B) Que 20·p sea divisible por 18.</button></li>
+        <li style="margin-bottom:8px"><button class="rev-btn" style="background:#1e293b;width:100%;text-align:left" onclick="toggle('r-esca')">C) Que 20·p sea divisible por 360.</button></li>
+      </ul>
+      <div class="rev-ans" id="r-esca" style="background:#052e16;border-color:#16a34a;color:#86efac"><b>¡Correcto! (C):</b> La distancia subida es $20 \cdot p$. Un piso mide $360$ cm. Para estar en un piso exacto, la distancia subida ($20p$) debe ser múltiplo de $360$ (es decir, divisible por 360 sin resto).</div>
+    </div>
+  </div>
+</div>
+
+<!-- S3 PATRONES 1: LIKES -->
+<div class="slide" id="s3">
+  <div class="seg-bar">
+    <span class="seg-badge" style="background:#0d2e2e;color:#5eead4">Laboratorio Parte 1 · 25–40 min</span>
+    <span class="seg-time">Buscando la fórmula</span>
+  </div>
+  <h2>El sistema de créditos</h2>
+  <p style="font-size:15px;color:#94a3b8;margin-bottom:14px">Una app te da 12 créditos el Mes 1. Luego, cada mes agrega 11 créditos. Completa la tabla para hallar la fórmula. <i>(Haz clic en las celdas grises para revelar).</i></p>
+  <table class="ptable" id="ptab">
+    <tr><th>Mes (n)</th><th>Créditos</th><th>Forma</th></tr>
+    <tr><td>1</td><td class="hidden" onclick="rev(this,'12')">?</td><td class="hidden" onclick="rev(this,'11(1) + 1')">?</td></tr>
+    <tr><td>2</td><td class="hidden" onclick="rev(this,'23')">?</td><td class="hidden" onclick="rev(this,'11(2) + 1')">?</td></tr>
+    <tr><td>3</td><td class="hidden" onclick="rev(this,'34')">?</td><td class="hidden" onclick="rev(this,'11(3) + 1')">?</td></tr>
+    <tr><td>10</td><td class="hidden" onclick="rev(this,'111')">?</td><td class="hidden" onclick="rev(this,'11(10) + 1')">?</td></tr>
+    <tr><td>100</td><td class="hidden" onclick="rev(this,'1101')">?</td><td class="hidden" onclick="rev(this,'11(100) + 1')">?</td></tr>
+    <tr><td style="color:#38bdf8">n</td><td class="hidden" onclick="rev(this,'11n + 1')" style="color:#fbbf24">?</td><td class="hidden" onclick="rev(this,'Diferencia Constante = Múltiplo')">¿Cómo se arma?</td></tr>
+  </table>
+  <p style="margin-top:16px;font-size:14px;color:#cbd5e1"><b>Regla M1:</b> Si la diferencia es constante (salta de 11 en 11), la fórmula empieza con <b>11n</b>. Luego pruebas con $n=1$ y ajustas sumando o restando lo que falte.</p>
+</div>
+
+<!-- S4 PATRONES 2: GAUSSCOINS -->
+<div class="slide" id="s4">
+  <div class="seg-bar">
+    <span class="seg-badge" style="background:#2d1f5e;color:#a5b4fc">Laboratorio Parte 2 · 40–55 min</span>
+    <span class="seg-time">El Algoritmo de Minería</span>
+  </div>
+  <h2>Las ilusiones ópticas de los números</h2>
+  <div class="parts" style="grid-template-columns:1fr 1fr;">
+    <div class="part">
+      <div class="part-label">Contexto y Modelo</div>
+      <p>Un servidor mina "GaussCoins" (GC).<br>Al término del Día 1, tiene <b>6 GC</b> acumulados. A partir de ahí, suma exactamente <b>10 GC</b> diarios al pozo.</p>
+      <ul>
+        <li>¿Cuál es la fórmula para el Día <b><var>n</var></b>?</li>
+      </ul>
+      <button class="rev-btn" onclick="toggle('rmod')">Ver Fórmula</button>
+      <div class="rev-ans" id="rmod">Sube de 10 en 10, así que empieza con <b>10n</b>. Si evalúo en n=1 da 10, pero necesito que dé 6. Le resto 4. <br><b>Fórmula: 10n - 4</b>.</div>
+    </div>
+    <div class="part">
+      <div class="part-label">Las Trampas (Auditoría)</div>
+      <div class="fiction">«Como todos los números terminan en 6 (16, 26, 36...), puedo asegurar que el pozo <b>siempre será un múltiplo de 6</b>.»<span>— Pedro</span></div>
+      <div class="fiction">«Como te regalan de 10 en 10, y el 10 es múltiplo de 5, seguro <b>algún día el pozo será múltiplo de 5</b>.»<span>— Sofía</span></div>
+      <p>Refuta a ambos usando reglas de divisibilidad reales.</p>
+    </div>
+  </div>
+</div>
+
+<!-- S5 QUIZ SPRINT -->
+<div class="slide" id="s5">
+  <div class="seg-bar">
+    <span class="seg-badge" style="background:#1a0a2e;color:#d8b4fe">Prueba de Fuego · 55–75 min</span>
+    <span class="seg-time">Sprint PAES</span>
+  </div>
+  <h2 id="quiz-title">Pregunta 1 de 5</h2>
+  <div id="quiz-area"></div>
+  <div class="quiz-nav">
+    <button id="q-prev" onclick="qMove(-1)" disabled>← Anterior</button>
+    <span class="quiz-prog" id="q-score"></span>
+    <button id="q-next" onclick="qMove(1)" disabled>Siguiente →</button>
+  </div>
+</div>
+
+<!-- S6 RESPUESTAS -->
+<div class="slide" id="s6">
+  <div class="seg-bar">
+    <span class="seg-badge" style="background:#0c1a2e;color:#7dd3fc">Cierre · 75–80 min</span>
+    <span class="seg-time">Ticket de Salida</span>
+  </div>
+  <h2>Respuestas Clave del Laboratorio</h2>
+  <div class="ans-grid">
+    <div class="ans-card">
+      <h3 style="color:#f59e0b">La Escalera</h3>
+      <p><b>Distancia:</b> 18 pisos no importa, lo que importa es que sube <b>$20 \cdot p$</b> centímetros. Para que haya subido un piso completo, la distancia subida ($20p$) debe poder dividirse de manera exacta en el alto total del piso ($360$ cm).</p>
+    </div>
+    <div class="ans-card">
+      <h3 style="color:#a5b4fc">Minería (Pedro y Sofía)</h3>
+      <p><b>Pedro se equivoca:</b> Terminar en 6 no es regla de nada. 16 y 26 NO son divisibles por 3, por tanto, tampoco por 6.</p>
+      <p><b>Sofía se equivoca:</b> Sumar un múltiplo de 5 a un número que termina en 6, siempre dará un número que termina en 6. Los múltiplos de 5 obligatoriamente terminan en 0 o 5. ¡Nunca lo alcanzará!</p>
+    </div>
+    <div class="ans-card" style="grid-column:span 2">
+      <h3 style="color:#86efac">Regla de Oro (Patrones)</h3>
+      <p>En M1, si la serie salta de un número constante (ej. +4, +4, +4), la fórmula general es simplemente la tabla de multiplicar de ese número ($4n$) sumando o restando un ajuste inicial. Reemplazar $n=1$ siempre evita que te equivoques de distractor.</p>
+    </div>
+  </div>
+</div>
+
+<!-- NAV INTERACTIVO -->
+<nav>
+  <button id="btn-prev" onclick="move(-1)" disabled>← Anterior</button>
+  <div style="display:flex;align-items:center;gap:18px">
+    <div class="dots" id="dots"></div>
+    <span class="counter" id="counter">1 / 7</span>
+  </div>
+  <button id="btn-next" onclick="move(1)">Siguiente →</button>
+</nav>
+<div class="hint">← → para navegar</div>
+
+<script>
+// NAVEGACIÓN BÁSICA DE DIAPOSITIVAS
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+const dotsEl = document.getElementById('dots');
+
+for(let i=0; i<total; i++){
+  const d = document.createElement('div');
+  d.className = 'dot' + (i===0 ? ' active' : '');
+  d.onclick = () => go(i);
+  dotsEl.appendChild(d);
+}
+
+function go(n){
+  slides[cur].classList.remove('active');
+  dotsEl.children[cur].classList.remove('active');
+  cur = Math.max(0, Math.min(n, total-1));
+  slides[cur].classList.add('active');
+  dotsEl.children[cur].classList.add('active');
+  document.getElementById('counter').textContent = (cur+1) + ' / ' + total;
+  document.getElementById('btn-prev').disabled = cur === 0;
+  document.getElementById('btn-next').disabled = cur === total-1;
+  window.scrollTo(0,0); // Reset scroll on slide change
+}
+
+function move(d){ go(cur+d); }
+
+// Solo avanza con flechas derecha/izquierda para no estropear el scroll vertical
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight') move(1);
+  if(e.key === 'ArrowLeft') move(-1);
+});
+
+// FUNCIONES DE REVELADO
+function toggle(id){
+  const el = document.getElementById(id);
+  el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+}
+
+function rev(td, val){
+  td.textContent = val;
+  td.classList.remove('hidden');
+  td.classList.add('shown');
+  td.onclick = null;
+}
+
+// MOTOR DEL QUIZ (RECONSTRUIDO PARA MAYOR ESTABILIDAD)
+const quiz =[
+  {
+    q: 'Si la suma de 5 enteros consecutivos se representa como n + (n+1) + (n+2) + (n+3) + (n+4), ¿cuál de las siguientes afirmaciones es SIEMPRE verdadera sobre el resultado final?',
+    opts:[
+      'A) Es un número par',
+      'B) Es divisible por 5',
+      'C) Es un número impar',
+      'D) No se puede determinar su divisibilidad'
+    ],
+    ans: 1,
+    exp: 'Al agrupar términos iguales: 5n + 10. Factorizando queda 5(n + 2). Al estar multiplicado por 5, el resultado será obligatoriamente múltiplo de 5, independiente del valor de n.'
+  },
+  {
+    q: 'Un número de dos dígitos termina en 4. Si se le suma un múltiplo de 10, ¿es posible que el nuevo número sea divisible por 5?',
+    opts:[
+      'A) Sí, si el múltiplo de 10 es muy grande.',
+      'B) No, porque siempre terminará en 4.',
+      'C) Sí, porque 10 es múltiplo de 5.',
+      'D) Depende de si el número original es par.'
+    ],
+    ans: 1,
+    exp: 'Sumar un múltiplo de 10 (ej: 10, 20, 30) nunca altera la unidad del número original. Siempre terminará en 4, y para ser divisible por 5 DEBE terminar en 0 o 5.'
+  },
+  {
+    q: 'Si p es un número entero impar, ¿cuál de las siguientes expresiones representa SIEMPRE un número par?',
+    opts:[
+      'A) 3p + 2',
+      'B) p² + p',
+      'C) 2p + 1',
+      'D) p + 4'
+    ],
+    ans: 1,
+    exp: 'p² + p es lo mismo que p(p+1), que es la multiplicación de dos números consecutivos. La multiplicación de dos consecutivos siempre es par. Alternativa B. (Si p es impar, p+1 es par).'
+  },
+  {
+    q: 'Un juego de bloques empieza con una fila de 7 bloques. Cada nueva fila suma 4 bloques a la anterior. La cantidad total de bloques en la fila "n" está dada por:',
+    opts:[
+      'A) 7n + 4',
+      'B) 4n + 3',
+      'C) 4n + 7',
+      'D) 11n'
+    ],
+    ans: 1,
+    exp: 'La diferencia es constante (+4), por lo que la fórmula empieza con 4n. Para el término 1 (n=1), 4(1)=4, pero necesitamos que sea 7. Le sumamos 3. Fórmula correcta: 4n + 3.'
+  },
+  {
+    q: '¿Por qué el número 12.345.672 NO es divisible por 6, a pesar de terminar en 2 (número par)?',
+    opts:[
+      'A) Porque es muy grande para la regla del 6.',
+      'B) Porque la suma de sus dígitos es 30, y 30 no es divisible por 6.',
+      'C) Porque la suma de sus dígitos es 30, y 30 no es divisible por 9.',
+      'D) Porque la suma de sus dígitos es 30, y 30 no es divisible por 3 (¡Es broma, 30 sí es, revisa la suma!).'
+    ],
+    ans: 3,
+    exp: 'Veamos la suma real de los dígitos: 1+2+3+4+5+6+7+2 = 30. ¡Momento! 30 SÍ es divisible por 3, y termina en par. ¡Entonces SÍ ES divisible por 6! Esta era una pregunta trampa en el diseño, la alternativa D rompe la ilusión óptica.'
+  } // Corrigiendo la trampa de la última pregunta para hacerlos pensar
+];
+
+// Corrección de la pregunta 5 para no confundir el script
+quiz[4] = {
+  q: '¿Por qué el número 12.345.674 NO es divisible por 6, a pesar de ser un número par?',
+  opts:[
+    'A) Porque termina en 4, y los múltiplos de 6 terminan en 6.',
+    'B) Porque la suma de sus dígitos es 32, que no es divisible por 3.',
+    'C) Porque para ser divisible por 6 debe ser divisible por 4 y por 2.',
+    'D) Porque 6 no cabe en los últimos dos dígitos (74).'
+  ],
+  ans: 1,
+  exp: 'Para ser divisible por 6, debe ser par (lo es) Y la suma de sus dígitos debe ser divisible por 3. 1+2+3+4+5+6+7+4 = 32. Como 32 no se divide por 3, el número entero falla la regla del 6.'
+};
+
+let qcur = 0;
+let qscores = new Array(quiz.length).fill(null);
+
+function buildQ(){
+  const q = quiz[qcur];
+  document.getElementById('quiz-title').textContent = 'Pregunta ' + (qcur + 1) + ' de ' + quiz.length;
+  const area = document.getElementById('quiz-area');
+  
+  // Limpiar contenedor
+  area.innerHTML = '';
+  
+  // Caja de pregunta
+  const qbox = document.createElement('div');
+  qbox.className = 'quiz-q';
+  qbox.textContent = q.q;
+  area.appendChild(qbox);
+  
+  // Grid de alternativas
+  const grid = document.createElement('div');
+  grid.className = 'quiz-opts';
+  
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'qopt';
+    btn.textContent = opt;
+    
+    if (qscores[qcur] !== null) {
+      btn.disabled = true;
+      if (i === q.ans) {
+        btn.classList.add('correct');
+      } else if (i === qscores[qcur]) {
+        btn.classList.add('wrong');
+      }
+    } else {
+      btn.onclick = () => answerQ(i);
+    }
+    grid.appendChild(btn);
+  });
+  
+  area.appendChild(grid);
+  
+  // Explicación
+  if (qscores[qcur] !== null) {
+    const exp = document.createElement('div');
+    exp.className = 'quiz-exp';
+    exp.style.background = (qscores[qcur] === q.ans) ? '#052e16' : '#2d0000';
+    exp.style.color = (qscores[qcur] === q.ans) ? '#86efac' : '#fca5a5';
+    exp.textContent = q.exp;
+    exp.style.display = 'block';
+    area.appendChild(exp);
+  }
+  
+  // Botones Navegación
+  document.getElementById('q-prev').disabled = (qcur === 0);
+  document.getElementById('q-next').disabled = (qscores[qcur] === null || qcur === quiz.length - 1);
+  
+  // Progreso
+  const done = qscores.filter(x => x !== null).length;
+  const correct = qscores.filter((x, i) => x === quiz[i].ans).length;
+  document.getElementById('q-score').textContent = done > 0 ? correct + ' correctas de ' + done + ' respondidas' : '';
+}
+
+function answerQ(i){
+  qscores[qcur] = i;
+  buildQ();
+}
+
+function qMove(d){
+  qcur = Math.max(0, Math.min(qcur + d, quiz.length - 1));
+  buildQ();
+}
+
+// Iniciar Quiz
+buildQ();
+</script>
+</body>
+</html>
